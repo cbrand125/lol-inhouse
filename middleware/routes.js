@@ -1,18 +1,18 @@
 const express = require('express');
-const calculator = require('../controllers/calc.controller');
+const stats = require('../controllers/stats.controller');
 
 const router = express.Router();
 
 router.get('/', (request, response, next) => {
-  response.send('Welcome to MTG Calculator');
+  response.send('Welcome to League In-House Tracker');
 });
 
 router.get('/api', (request, response, next) => {
-  response.send('Welcome to the MTG Calculator API!');
+  response.send('Welcome to the League In-House Tracker API!');
 });
 
-/* calculator routes */
-router.get('/api/calculate', calculator.getCalculation);
-router.post('/api/calculate', calculator.calculateForEachColor);
+/* routes */
+router.get('/api/stats/tournament', stats.getTournamentStats);
+router.get('/api/stats/player', stats.getPlayerStats);
 
 module.exports = router;
