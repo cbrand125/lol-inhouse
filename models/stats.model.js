@@ -100,29 +100,40 @@ exports.calculateMultipleColors = async ({
   return result;
 };
 
-exports.saveGameData = async ({game_id, tournament_name}) => {
-  return axios.get(
+exports.saveGameData = async ({ game_id, tournament_name }) => {
+  const { data } = await axios.get(
     'https://na1.api.riotgames.com/lol/match/v4/matches/3314461276',
     {
       headers: { 'X-Riot-Token': 'RGAPI-34ba7d93-d7ae-4cb2-a4ba-68858fb3f69c' }
     }
-  ).then(response => {
+  );
 
-    const data = response.data;
-  return Promise.all(db.query(
-    `INSERT INTO game_data (player, game_id, tournament_name, kills, deaths, assists, champ, position, win) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`,
-    [
-      player, game_id, tournament_name, kills, deaths, assists, champ, position, win
-    ]
-  ));
+  const savePromises = [];
+  
+  for (let i = 0; i < 10; i++) {
+    let player;
+    let kills;
+    let deaths;
+    let champ;
+    let position;
+    let win;
 
-  });
+
+    savePromises.push(new Promise(() => {
+      db.query(
+        `INSERT INTO game_data (player, game_id, tournament_name, kills, deaths, assists, champ, position, win) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`,
+        [player, game_id, tournament_name, kills, deaths, assists, champ, position, win]
+      );
+    }));
+  }
+
+  return await Promise.all(savePromises);
 };
 
-exports.retrievePlayerStats = async ({player_name}) => {
+exports.retrievePlayerStats = async ({ player_name }) => {
   return true;
 };
 
-exports.retrieveTournamentStats = async ({tournament_name}) => {
+exports.retrieveTournamentStats = async ({ tournament_name }) => {
   return true;
 };
