@@ -104,20 +104,23 @@ exports.saveGameData = async ({ game_id, tournament_name }) => {
   const { data } = await axios.get(
     'https://na1.api.riotgames.com/lol/match/v4/matches/3314461276',
     {
-      headers: { 'X-Riot-Token': 'RGAPI-34ba7d93-d7ae-4cb2-a4ba-68858fb3f69c' }
+      headers: { 'X-Riot-Token': 'RGAPI-a29ad2a1-5609-4eed-8da2-eb782083f40f' }
     }
   );
 
   const savePromises = [];
   
   for (let i = 0; i < 10; i++) {
-    let player;
-    let kills;
-    let deaths;
-    let champ;
-    let position;
-    let win;
-
+    let player = data.participantIdentities[i].player.summonerName;
+    let kills = data.participants[i].stats.kills;
+    let deaths = data.participants[i].stats.deaths;
+    let assists = data.participants[i].stats.assists;
+    let champ; // TODO: get champid and convert to string champ name
+    let position = data.participants[i].timeline.lane;
+    if ('DUO_SUPPORT' === data.participants[i].timeline.role) {
+      position = 'SUPPORT';
+    }
+    let win = data.participants[i].stats.win;
 
     savePromises.push(new Promise(() => {
       db.query(
