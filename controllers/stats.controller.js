@@ -17,3 +17,12 @@ exports.getPlayerStats = async ({ query }, response, next) => {
     next(err);
   }
 };
+
+exports.putGameData = async ({ query }, response, next) => {
+  try {
+    await statsData.saveGameData(query);
+    return response.status(200);
+  } catch (err) {
+    next(err);
+  }
+};

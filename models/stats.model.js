@@ -99,3 +99,30 @@ exports.calculateMultipleColors = async ({
 
   return result;
 };
+
+exports.saveGameData = async ({game_id, tournament_name}) => {
+  return axios.get(
+    'https://na1.api.riotgames.com/lol/match/v4/matches/3314461276',
+    {
+      headers: { 'X-Riot-Token': 'RGAPI-34ba7d93-d7ae-4cb2-a4ba-68858fb3f69c' }
+    }
+  ).then(response => {
+
+    const data = response.data;
+  return Promise.all(db.query(
+    `INSERT INTO game_data (player, game_id, tournament_name, kills, deaths, assists, champ, position, win) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`,
+    [
+      player, game_id, tournament_name, kills, deaths, assists, champ, position, win
+    ]
+  ));
+
+  });
+};
+
+exports.retrievePlayerStats = async ({player_name}) => {
+  return true;
+};
+
+exports.retrieveTournamentStats = async ({tournament_name}) => {
+  return true;
+};

@@ -14,5 +14,6 @@ router.get('/api', (request, response, next) => {
 /* routes */
 router.get('/api/stats/tournament', stats.getTournamentStats);
 router.get('/api/stats/player', stats.getPlayerStats);
+router.put('/api/stats/game', stats.putGameData);
 
 module.exports = router;
