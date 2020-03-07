@@ -17,7 +17,7 @@ router.get('/api', (request, response, next) => {
 router.put('/api/stats/game', validate, stats.putGameData);
 router.get('/api/stats/tournament', stats.getTournamentStats);
 
-router.post('/api/users/signup', users.postUser);
+router.post('/api/users/signup', validate, users.postUser);
 router.post('/api/users/login', users.postUserAuthentication);
 router.delete('/api/users/logout', validate, users.deleteSession);
 router.delete('/api/users/logout/all', validate, users.deleteAllSessions);
