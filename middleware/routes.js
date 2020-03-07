@@ -14,9 +14,8 @@ router.get('/api', (request, response, next) => {
 });
 
 /* routes */
+router.put('/api/stats/game', validate, stats.putGameData);
 router.get('/api/stats/tournament', stats.getTournamentStats);
-router.get('/api/stats/player', stats.getPlayerStats);
-router.put('/api/stats/game', stats.putGameData);
 
 router.post('/api/users/signup', users.postUser);
 router.post('/api/users/login', users.postUserAuthentication);
