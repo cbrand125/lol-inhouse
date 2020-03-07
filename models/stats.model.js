@@ -1,5 +1,5 @@
 const db = require('../db');
-const { calculateLandCombinations } = require('../utils/landMath');
+const { champIDToName } = require('../utils/riotApiUtils');
 const ClientFriendlyError = require('../utils/ClientFriendlyError');
 
 exports.calculate = async ({
@@ -115,7 +115,7 @@ exports.saveGameData = async ({ game_id, tournament_name }) => {
     let kills = data.participants[i].stats.kills;
     let deaths = data.participants[i].stats.deaths;
     let assists = data.participants[i].stats.assists;
-    let champ; // TODO: get champid and convert to string champ name
+    let champ = champIDToName(data.participants[i].championId);
     let position = data.participants[i].timeline.lane;
     if ('DUO_SUPPORT' === data.participants[i].timeline.role) {
       position = 'SUPPORT';
