@@ -74,6 +74,7 @@ exports.saveGameData = async ({
 };
 
 exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
+  console.log('made it 0');
   let players = await db.query(
     `SELECT player FROM game_data WHERE tournament_name = $1;`,
     [tournamentName]
