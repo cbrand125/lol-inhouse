@@ -99,6 +99,7 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
   await Promise.all(retrievePromises);
 
   const returnData = {};
+  console.log('made it 1');
   for (const { player } of players) {
     const statAggregate = new PlayerAggregatedData();
     const kdas = statAggregate.kda.overall;
@@ -107,6 +108,7 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
     const wins = statAggregate.win.overall;
     const champWins = statAggregate.win.champs;
     const roleWins = statAggregate.win.roles;
+    console.log('made it 2');
 
     for (const gameData of playerData[player]) {
       const { kills, deaths, assists, champ, position, win } = gameData;
@@ -119,6 +121,7 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
       (kdas = kdas || []).push(kda);
       (wins = wins || []).push(win);
     }
+    console.log('made it 3');
 
     returnData[player] = {};
     const returnPlayer = returnData[player];
@@ -126,6 +129,8 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
     returnPlayer['Overall Games Played'] = wins.length;
     returnPlayer['Overall Winrate'] = winrate(wins);
     returnPlayer['Overall KDA'] = average(kdas);
+
+    console.log('made it 4');
 
     returnPlayer['Champions'] = {};
     for (const champ of Object.keys(statCalcs.kda.champs)) {
@@ -137,6 +142,7 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
       currentPlayerChamp['KDA'] = average(champKdas[champ]);
     }
 
+    console.log('made it 5');
     returnPlayer['Roles'] = {};
     for (const role of Object.keys(statCalcs.kda.roles)) {
       returnPlayer['Roles'][role] = {};
