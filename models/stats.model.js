@@ -85,6 +85,7 @@ exports.saveGameData = async ({
         ]
       )
     );
+  }
 
   return Promise.all(savePromises);
 };
