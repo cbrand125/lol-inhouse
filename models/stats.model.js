@@ -3,6 +3,33 @@ const db = require('../db');
 const { champIDtoName } = require('../utils/riotApiUtils');
 require('dotenv').config();
 
+class PlayerAggregatedData {
+  constructor() {
+    this.kda = {};
+    this.kda.overall = [];
+    this.kda.champs = {};
+    this.kda.roles = {};
+    this.win = {};
+    this.win.overall = [];
+    this.win.champs = {};
+    this.win.roles = {};
+  }
+}
+
+const average = (values) => {
+  values.reduce(
+    (total, current) => total + current,
+    0
+  ) / values.length;
+};
+
+const winrate = (bools) => {
+  bools.reduce(
+    (winCount, current) => (current ? winCount + 1 : winCount),
+    0
+  ) / bools.length;
+};
+
 exports.saveGameData = async ({
   game_id: gameID,
   tournament_name: tournamentName
@@ -73,76 +100,51 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
 
   const returnData = {};
   for (const { player } of players) {
-    const statCalcs = {};
-    statCalcs.kda = {};
-    statCalcs.kda.champs = {};
-    statCalcs.kda.roles = {};
-    statCalcs.win = {};
-    statCalcs.win.champs = {};
-    statCalcs.win.roles = {};
+    const statAggregate = new PlayerAggregatedData();
+    const kdas = statAggregate.kda.overall;
+    const champKdas = statAggregate.kda.champs;
+    const roleKdas = statAggregate.kda.roles;
+    const wins = statAggregate.win.overall;
+    const champWins = statAggregate.win.champs;
+    const roleWins = statAggregate.win.roles;
+
     for (const gameData of playerData[player]) {
       const { kills, deaths, assists, champ, position, win } = gameData;
       const kda = (kills + assists) / Math.max(1, deaths);
 
-      (statCalcs.kda.champs[champ] = statCalcs.kda.champs[champ] || []).push(
-        kda
-      );
-      (statCalcs.kda.roles[position] =
-        statCalcs.kda.roles[position] || []).push(kda);
-      (statCalcs.win.champs[champ] = statCalcs.win.champs[champ] || []).push(
-        win
-      );
-      (statCalcs.win.roles[position] =
-        statCalcs.win.roles[position] || []).push(win);
-      (statCalcs.kda.overall = statCalcs.kda.overall || []).push(kda);
-      (statCalcs.win.overall = statCalcs.win.overall || []).push(win);
+      (champKdas[champ] = champKdas[champ] || []).push(kda);
+      (roleKdas[position] = roleKdas[position] || []).push(kda);
+      (champWins[champ] = champWins[champ] || []).push(win);
+      (roleWins[position] = roleWins[position] || []).push(win);
+      (kdas = kdas || []).push(kda);
+      (wins = wins || []).push(win);
     }
 
     returnData[player] = {};
-    returnData[player]['Overall Games Played'] = statCalcs.win.overall.length;
-    returnData[player]['Overall Winrate'] =
-      statCalcs.win.overall.reduce(
-        (winCount, current) => (current ? winCount + 1 : winCount),
-        0
-      ) / statCalcs.win.overall.length;
-    returnData[player]['Overall KDA'] =
-      statCalcs.kda.overall.reduce(
-        (totalKDA, current) => totalKDA + current,
-        0
-      ) / statCalcs.kda.overall.length;
+    const returnPlayer = returnData[player];
 
-    returnData[player]['Champions'] = {};
+    returnPlayer['Overall Games Played'] = wins.length;
+    returnPlayer['Overall Winrate'] = winrate(wins);
+    returnPlayer['Overall KDA'] = average(kdas);
+
+    returnPlayer['Champions'] = {};
     for (const champ of Object.keys(statCalcs.kda.champs)) {
-      returnData[player]['Champions'][champ] = {};
-      returnData[player]['Champions'][champ]['Games Played'] =
-        statCalcs.win.champs[champ].length;
-      returnData[player]['Champions'][champ]['Winrate'] =
-        statCalcs.win.champs[champ].reduce(
-          (winCount, current) => (current ? winCount + 1 : winCount),
-          0
-        ) / statCalcs.win.champs[champ].length;
-      returnData[player]['Champions'][champ]['KDA'] =
-        statCalcs.kda.champs[champ].reduce(
-          (totalKDA, current) => totalKDA + current,
-          0
-        ) / statCalcs.kda.champs[champ].length;
+      returnPlayer['Champions'][champ] = {};
+      const currentPlayerChamp = returnData[player]['Champions'][champ];
+
+      currentPlayerChamp['Games Played'] = champWins[champ].length;
+      currentPlayerChamp['Winrate'] = winrate(champWins[champ]);
+      currentPlayerChamp['KDA'] = average(champKdas[champ]);
     }
 
-    returnData[player]['Roles'] = {};
+    returnPlayer['Roles'] = {};
     for (const role of Object.keys(statCalcs.kda.roles)) {
-      returnData[player]['Roles'][role] = {};
-      returnData[player]['Roles'][role]['Games Played'] =
-        statCalcs.win.roles[role].length;
-      returnData[player]['Roles'][role]['Winrate'] =
-        statCalcs.win.roles[role].reduce(
-          (winCount, current) => (current ? winCount + 1 : winCount),
-          0
-        ) / statCalcs.win.roles[role].length;
-      returnData[player]['Roles'][role]['KDA'] =
-        statCalcs.kda.roles[role].reduce(
-          (totalKDA, current) => totalKDA + current,
-          0
-        ) / statCalcs.kda.roles[role].length;
+      returnPlayer['Roles'][role] = {};
+      const currentPlayerRole = returnPlayer['Roles'][role];
+
+      currentPlayerRole['Games Played'] = roleWins[role].length;
+      currentPlayerRole['Winrate'] = winrate(roleWins[role]);
+      currentPlayerRole['KDA'] = average(roleKdas[role]);
     }
   }
 
