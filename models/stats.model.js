@@ -74,7 +74,6 @@ exports.saveGameData = async ({
 };
 
 exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
-  console.log('made it 0');
   let players = await db.query(
     `SELECT player FROM game_data WHERE tournament_name = $1;`,
     [tournamentName]
@@ -100,7 +99,6 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
   await Promise.all(retrievePromises);
 
   const returnData = {};
-  console.log('made it 1');
   for (const { player } of players) {
     const statAggregate = new PlayerAggregatedData();
     const kdas = statAggregate.kda.overall;
@@ -109,20 +107,26 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
     const wins = statAggregate.win.overall;
     const champWins = statAggregate.win.champs;
     const roleWins = statAggregate.win.roles;
-    console.log('made it 2');
 
     for (const gameData of playerData[player]) {
+      console.log('made it 0');
       const { kills, deaths, assists, champ, position, win } = gameData;
       const kda = (kills + assists) / Math.max(1, deaths);
-
+      
       (champKdas[champ] = champKdas[champ] || []).push(kda);
+      console.log('made it 1');
       (roleKdas[position] = roleKdas[position] || []).push(kda);
+      console.log('made it 2');
       (champWins[champ] = champWins[champ] || []).push(win);
+      console.log('made it 3');
       (roleWins[position] = roleWins[position] || []).push(win);
+      console.log('made it 4');
       (kdas = kdas || []).push(kda);
+      console.log('made it 5');
       (wins = wins || []).push(win);
+      console.log('made it 6');
     }
-    console.log('made it 3');
+    console.log('made it OUT');
 
     returnData[player] = {};
     const returnPlayer = returnData[player];

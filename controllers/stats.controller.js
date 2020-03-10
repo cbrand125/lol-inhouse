@@ -11,7 +11,6 @@ exports.putGameData = async ({ query }, response, next) => {
 
 exports.getTournamentStats = async ({ query }, response, next) => {
   try {
-    console.log( 'getting' );
     const results = await statsData.retrieveTournament(query);
     return response.status(200).send(results);
   } catch (err) {
