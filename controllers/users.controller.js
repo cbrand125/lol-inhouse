@@ -5,7 +5,7 @@ const users = require('../models/users.model');
  * @param {Object} req
  * @param {Object} res
  */
-exports.postUser = async (req, res) => {
+exports.postUser = async (req, res, next) => {
   try {
     const cookie = await users.add(req.body);
     return res.status(201).send(cookie);
@@ -19,7 +19,7 @@ exports.postUser = async (req, res) => {
  * @param {Object} req
  * @param {Object} res
  */
-exports.postUserAuthentication = async (req, res) => {
+exports.postUserAuthentication = async (req, res, next) => {
   try {
     const cookie = await users.authenticate(req.body);
     return res.status(201).send(cookie);
@@ -33,7 +33,7 @@ exports.postUserAuthentication = async (req, res) => {
  * @param {Object} req
  * @param {Object} res
  */
-exports.deleteSession = async (req, res) => {
+exports.deleteSession = async (req, res, next) => {
   try {
     await users.logout(req.body);
     return res.sendStatus(204);
@@ -47,7 +47,7 @@ exports.deleteSession = async (req, res) => {
  * @param {Object} req
  * @param {Object} res
  */
-exports.deleteAllSessions = async (req, res) => {
+exports.deleteAllSessions = async (req, res, next) => {
   try {
     await users.logoutAll(req.body);
     return res.sendStatus(204);
