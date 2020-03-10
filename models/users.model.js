@@ -1,4 +1,5 @@
 const db = require('../db');
+const ClientFriendlyError = require('../utils/ClientFriendlyError');
 
 /**
  * Add a new user
@@ -11,7 +12,7 @@ const db = require('../db');
  */
 exports.add = async ({ email, password, first, last }) => {
   if (!email || !password) {
-    throw new Error('Missing Required Parameters');
+    throw new ClientFriendlyError('Missing Required Parameters', 400);
   }
 
   const userid = await db.query(
@@ -37,7 +38,7 @@ exports.add = async ({ email, password, first, last }) => {
  */
 exports.authenticate = async ({ email, password }) => {
   if (!email || !password) {
-    throw new Error('Missing Required Parameters');
+    throw new ClientFriendlyError('Missing Required Parameters', 400);
   }
 
   const result = await db.query(
@@ -77,7 +78,7 @@ exports.authenticate = async ({ email, password }) => {
  */
 exports.logout = async ({ cookie }) => {
   if (!cookie) {
-    throw new Error('Missing Required Parameters');
+    throw new ClientFriendlyError('Missing Required Parameters', 400);
   }
 
   await db.query(
@@ -96,7 +97,7 @@ exports.logout = async ({ cookie }) => {
  */
 exports.logoutAll = async ({ cookie }) => {
   if (!cookie) {
-    throw new Error('Missing Required Parameters');
+    throw new ClientFriendlyError('Missing Required Parameters', 400);
   }
 
   const result = await db.query(
@@ -128,7 +129,7 @@ exports.verify = async cookie => {
     );
 
     if (result.rowCount !== 0) {
-      return true;
+      return result.rows[0].user_id;
     }
 
     return false;

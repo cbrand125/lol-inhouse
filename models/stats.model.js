@@ -1,6 +1,7 @@
 const axios = require('axios');
 const db = require('../db');
 const { champIDtoName } = require('../utils/riotApiUtils');
+const ClientFriendlyError = require('../utils/ClientFriendlyError');
 require('dotenv').config();
 
 const average = (values) => {
@@ -20,7 +21,32 @@ const winrate = (bools) => {
 exports.saveGameData = async ({
   game_id: gameID,
   tournament_name: tournamentName
-}) => {
+}, userid) => {
+  if (!gameID || !tournamentName || !userid) {
+    throw new ClientFriendlyError('Missing Required Parameters', 400);
+  }
+
+  const tournamentData = await db.query(
+    `SELECT * FROM tournaments WHERE tournament_name = $1;`,
+    [tournamentName]
+  );
+
+  if (tournamentData.rowCount !== 0) {
+    if (tournamentData.rows[0].creator_id !== userid) {
+      if (!tournamentData.rows[0].authorized_ids.includes(userid)) {
+        throw new ClientFriendlyError('User not authorized to save game data for this tournament name', 403);
+      }
+    }
+  } else {
+    db.query(
+      `INSERT INTO tournaments (name, creator_id) VALUES ($1, $2);`,
+      [
+        tournamentName,
+        userid
+      ]
+    );
+  }
+
   const { data } = await axios.get(
     `https://na1.api.riotgames.com/lol/match/v4/matches/${gameID}`,
     {
@@ -31,6 +57,10 @@ exports.saveGameData = async ({
   const savePromises = [];
 
   for (let i = 0; i < 10; i++) {
+    if (!data.participantIdentities[i]) {
+      throw new ClientFriendlyError('Participants Not Found', 404);
+    }
+
     const player = data.participantIdentities[i].player.summonerName;
     const { kills, deaths, assists, win } = data.participants[i].stats;
     const champ = champIDtoName(data.participants[i].championId);
@@ -55,12 +85,15 @@ exports.saveGameData = async ({
         ]
       )
     );
-  }
 
   return Promise.all(savePromises);
 };
 
 exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
+  if (!tournamentName) {
+    throw new ClientFriendlyError('Missing Required Parameters', 400);
+  }
+
   let players = await db.query(
     `SELECT player FROM game_data WHERE tournament_name = $1;`,
     [tournamentName]
@@ -98,65 +131,33 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
       const { kills, deaths, assists, champ, position, win } = gameData;
       const kda = (kills + assists) / Math.max(1, deaths);
 
-      (statCalcs.kda.champs[champ] = statCalcs.kda.champs[champ] || []).push(
-        kda
-      );
-      (statCalcs.kda.roles[position] =
-        statCalcs.kda.roles[position] || []).push(kda);
-      (statCalcs.win.champs[champ] = statCalcs.win.champs[champ] || []).push(
-        win
-      );
-      (statCalcs.win.roles[position] =
-        statCalcs.win.roles[position] || []).push(win);
+      (statCalcs.kda.champs[champ] = statCalcs.kda.champs[champ] || []).push(kda);
+      (statCalcs.kda.roles[position] = statCalcs.kda.roles[position] || []).push(kda);
+      (statCalcs.win.champs[champ] = statCalcs.win.champs[champ] || []).push(win);
+      (statCalcs.win.roles[position] = statCalcs.win.roles[position] || []).push(win);
       (statCalcs.kda.overall = statCalcs.kda.overall || []).push(kda);
       (statCalcs.win.overall = statCalcs.win.overall || []).push(win);
     }
 
     returnData[player] = {};
     returnData[player]['Overall Games Played'] = statCalcs.win.overall.length;
-    returnData[player]['Overall Winrate'] =
-      statCalcs.win.overall.reduce(
-        (winCount, current) => (current ? winCount + 1 : winCount),
-        0
-      ) / statCalcs.win.overall.length;
-    returnData[player]['Overall KDA'] =
-      statCalcs.kda.overall.reduce(
-        (totalKDA, current) => totalKDA + current,
-        0
-      ) / statCalcs.kda.overall.length;
+    returnData[player]['Overall Winrate'] = winrate(statCalcs.win.overall);
+    returnData[player]['Overall KDA'] = average(statCalcs.kda.overall);
 
     returnData[player]['Champions'] = {};
     for (const champ of Object.keys(statCalcs.kda.champs)) {
       returnData[player]['Champions'][champ] = {};
-      returnData[player]['Champions'][champ]['Games Played'] =
-        statCalcs.win.champs[champ].length;
-      returnData[player]['Champions'][champ]['Winrate'] =
-        statCalcs.win.champs[champ].reduce(
-          (winCount, current) => (current ? winCount + 1 : winCount),
-          0
-        ) / statCalcs.win.champs[champ].length;
-      returnData[player]['Champions'][champ]['KDA'] =
-        statCalcs.kda.champs[champ].reduce(
-          (totalKDA, current) => totalKDA + current,
-          0
-        ) / statCalcs.kda.champs[champ].length;
+      returnData[player]['Champions'][champ]['Games Played'] = statCalcs.win.champs[champ].length;
+      returnData[player]['Champions'][champ]['Winrate'] = winrate(statCalcs.win.champs[champ]);
+      returnData[player]['Champions'][champ]['KDA'] = average(statCalcs.kda.champs[champ]);
     }
 
     returnData[player]['Roles'] = {};
     for (const role of Object.keys(statCalcs.kda.roles)) {
       returnData[player]['Roles'][role] = {};
-      returnData[player]['Roles'][role]['Games Played'] =
-        statCalcs.win.roles[role].length;
-      returnData[player]['Roles'][role]['Winrate'] =
-        statCalcs.win.roles[role].reduce(
-          (winCount, current) => (current ? winCount + 1 : winCount),
-          0
-        ) / statCalcs.win.roles[role].length;
-      returnData[player]['Roles'][role]['KDA'] =
-        statCalcs.kda.roles[role].reduce(
-          (totalKDA, current) => totalKDA + current,
-          0
-        ) / statCalcs.kda.roles[role].length;
+      returnData[player]['Roles'][role]['Games Played'] = statCalcs.win.roles[role].length;
+      returnData[player]['Roles'][role]['Winrate'] = winrate(statCalcs.win.roles[role]);
+      returnData[player]['Roles'][role]['KDA'] = average(statCalcs.kda.roles[role]);
     }
   }
 

@@ -1,5 +1,6 @@
 DROP INDEX IF EXISTS sessions_cookie_idx;
 DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS tournaments;
 DROP TABLE IF EXISTS users;
 DROP EXTENSION IF EXISTS pgcrypto;
 ---
@@ -12,6 +13,12 @@ CREATE TABLE users (
   create_date DATE NOT NULL DEFAULT CURRENT_DATE,
   first_name TEXT,
   last_name TEXT
+);
+---
+CREATE TABLE tournaments (
+  name TEXT NOT NULL PRIMARY KEY,
+  creator_id UUID REFERENCES users,
+  authorized_ids UUID[] REFERENCES users
 );
 ---
 CREATE TABLE sessions (

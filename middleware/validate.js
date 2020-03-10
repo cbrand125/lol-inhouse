@@ -5,10 +5,12 @@ module.exports = async (request, response, next) => {
   if (!auth) return response.end(401);
   const token = auth.split(' ')[1];
   try {
-    if (!(await users.verify(token))) {
+    const id = await users.verify(token);
+    if (!id) {
       response.sendStatus(401);
     } else {
       request.body.cookie = token;
+      request.body.userid = id;
       next();
     }
   } catch (err) {

@@ -1,8 +1,8 @@
 const statsData = require('../models/stats.model');
 
-exports.putGameData = async ({ query }, response, next) => {
+exports.putGameData = async ({ query, body }, response, next) => {
   try {
-    await statsData.saveGameData(query);
+    await statsData.saveGameData(query, body.userid);
     return response.sendStatus(200);
   } catch (err) {
     next(err);

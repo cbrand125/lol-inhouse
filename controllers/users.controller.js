@@ -10,8 +10,7 @@ exports.postUser = async (req, res) => {
     const cookie = await users.add(req.body);
     return res.status(201).send(cookie);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
@@ -25,8 +24,7 @@ exports.postUserAuthentication = async (req, res) => {
     const cookie = await users.authenticate(req.body);
     return res.status(201).send(cookie);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
@@ -40,8 +38,7 @@ exports.deleteSession = async (req, res) => {
     await users.logout(req.body);
     return res.sendStatus(204);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
 
@@ -55,7 +52,6 @@ exports.deleteAllSessions = async (req, res) => {
     await users.logoutAll(req.body);
     return res.sendStatus(204);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    next(err);
   }
 };
