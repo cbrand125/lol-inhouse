@@ -148,5 +148,6 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
     }
   }
 
+  console.log(returnData);
   return returnData;
 };
