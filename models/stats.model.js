@@ -130,7 +130,7 @@ exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
     returnPlayer['Champions'] = {};
     for (const champ of Object.keys(statCalcs.kda.champs)) {
       returnPlayer['Champions'][champ] = {};
-      const currentPlayerChamp = returnData[player]['Champions'][champ];
+      const currentPlayerChamp = returnPlayer['Champions'][champ];
 
       currentPlayerChamp['Games Played'] = champWins[champ].length;
       currentPlayerChamp['Winrate'] = winrate(champWins[champ]);
