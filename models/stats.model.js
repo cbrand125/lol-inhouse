@@ -38,6 +38,15 @@ exports.saveGameData = async (
     ]);
   }
 
+  const checkExists = await db.query(
+    `SELECT * FROM game_data WHERE tournament_name = $1 AND game_id = $2 AND player = $3;`,
+    [tournamentName, gameID, userid]
+  );
+
+  if (checkExists.rowCount !== 0 ) {
+    return;
+  }
+
   const { data } = await axios.get(
     `https://na1.api.riotgames.com/lol/match/v4/matches/${gameID}`,
     {
@@ -79,6 +88,22 @@ exports.saveGameData = async (
   }
 
   return Promise.all(savePromises);
+};
+
+exports.saveTournamentData = async (
+  { tournament_code: code, tournament_name: name },
+  userid
+) => {
+  if (!code || !name || !userid) {
+    throw new ClientFriendlyError('Missing Required Parameters', 400);
+  }
+
+  const { data } = await axios.get(
+    `https://na1.api.riotgames.com/lol/match/v4/matches/by-tournament-code/${code}/ids`,
+    {
+      headers: { 'X-Riot-Token': process.env.RIOT_API_KEY }
+    }
+  );
 };
 
 exports.retrieveTournament = async ({ tournament_name: tournamentName }) => {
