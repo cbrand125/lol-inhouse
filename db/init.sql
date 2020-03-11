@@ -17,8 +17,7 @@ CREATE TABLE users (
 ---
 CREATE TABLE tournaments (
   name TEXT NOT NULL PRIMARY KEY,
-  creator_id UUID REFERENCES users,
-  authorized_ids UUID[] REFERENCES users
+  creator_id UUID REFERENCES users
 );
 ---
 CREATE TABLE sessions (
